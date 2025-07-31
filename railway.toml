@@ -1,6 +1,5 @@
 [build]
 builder = "nixpacks"
-buildTimeout = 1800  # 30 minutes instead of default 10
 
 [deploy]
 startCommand = "python frontend/app.py"

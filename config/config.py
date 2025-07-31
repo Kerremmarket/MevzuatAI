@@ -14,12 +14,12 @@ class Config:
     ENVIRONMENT = os.getenv('RAILWAY_ENVIRONMENT_NAME', 'development')  # Railway sets this automatically
     IS_PRODUCTION = ENVIRONMENT == 'production' or bool(os.getenv('RAILWAY_ENVIRONMENT'))
     
-    # OpenAI API Configuration
-    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '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')
+    # OpenAI API Configuration - NEVER hardcode keys!
+    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
     
-    # Agent-specific API Keys (if different keys are needed)
-    AGENT1_API_KEY = OPENAI_API_KEY  # Use same key for consistency
-    AGENT3_API_KEY = OPENAI_API_KEY  # Use same key for consistency
+    # Agent-specific API Keys for optimal performance
+    AGENT1_API_KEY = os.getenv('OPENAI_API_KEY_NANO', OPENAI_API_KEY)    # Nano key for gpt-4o-mini
+    AGENT3_API_KEY = os.getenv('OPENAI_API_KEY_LARGE', OPENAI_API_KEY)   # Large context key for gpt-4o
     
     # Agent Models
     AGENT1_MODEL = "gpt-4o-mini"  # Query optimization agent

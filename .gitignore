@@ -39,8 +39,16 @@ Thumbs.db
 *.log
 logs/
 
-# Environment variables (local only)
+# Environment variables (local only) - CRITICAL SECURITY
 .env
+.env.local
+.env.development
+.env.production
+
+# API Keys and secrets
+*.key
+secrets/
+config/secrets.py
 
 # Database
 *.db

@@ -1,0 +1,31 @@
+# Minimal requirements for Railway deployment
+# Only essential packages to reduce build time
+
+# Core Flask app
+flask==2.3.2
+flask-cors==4.0.0
+
+# OpenAI API
+openai==0.27.8
+
+# Data handling (lightweight versions)
+pandas==2.0.3
+numpy==1.24.3
+
+# Text processing (essential only)
+sentence-transformers==2.2.2
+
+# Environment management
+python-dotenv==1.0.0
+
+# HTTP requests
+requests==2.31.0
+
+# JSON handling
+jsonschema==4.18.4
+
+# Logging
+logging
+
+# System utilities
+datetime

@@ -1,0 +1,16 @@
+[phases.setup]
+nixPkgs = ["python39", "pip"]
+
+[phases.install]
+cmds = [
+    "pip install --no-cache-dir --timeout=300 -r requirements-minimal.txt"
+]
+
+[phases.build]
+cmds = ["echo 'Build completed'"]
+
+[start]
+cmd = "python frontend/app.py"
+
+[variables]
+NIXPACKS_PYTHON_VERSION = "3.9"

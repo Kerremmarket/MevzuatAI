@@ -30,6 +30,9 @@ class Config:
     MAX_TOKENS_AGENT1 = 500      # Max tokens for query optimization
     MAX_TOKENS_AGENT3 = 4000     # Max tokens for legal analysis
     
+    # Production optimizations
+    SKIP_RAG_IN_PRODUCTION = IS_PRODUCTION  # Skip heavy RAG loading in production for now
+    
     # Data Paths
     DATA_DIR = "data"
     LEGAL_DATASET = "mevzuat_combined_final.xlsx"

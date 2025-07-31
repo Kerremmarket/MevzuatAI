@@ -1,0 +1,16 @@
+{
+  "total_chunks": 2353,
+  "total_laws": 1387,
+  "embedding_model": "text-embedding-3-small",
+  "embedding_dimensions": 1536,
+  "avg_tokens_per_chunk": 4027.04844878878,
+  "law_type_distribution": {
+    "Cumhurbaşkanlığı Kararnamesi": 49,
+    "Genelge": 276,
+    "Kanun": 1285,
+    "Kanun Hükmünde Kararname": 79,
+    "Tüzük": 147,
+    "Yönetmelik": 517
+  },
+  "timestamp": "20250730_005323"
+}

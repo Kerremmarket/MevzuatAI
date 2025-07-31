@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mevzuatAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f7f7f8;
+            color: #333;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: white;
+            color: #333;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .header-logo {
+            width: 188px;
+            height: 90px;
+            /* Add your logo image file to /static/images/ folder */
+            background-image: url('/static/images/logo1.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .beta-version {
+            background-color: #D4294A;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+            padding-top: 140px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            background-color: #fff;
+        }
+
+        .message {
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.assistant {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 1rem 1.25rem;
+            border-radius: 18px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .message.user .message-content {
+            background-color: #D4294A;
+            color: white;
+            border-bottom-right-radius: 5px;
+            box-shadow: 0 2px 8px rgba(212, 41, 74, 0.3);
+        }
+
+        .message.assistant .message-content {
+            background-color: #f1f3f5;
+            color: #333;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .message-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            margin: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 14px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .assistant-avatar {
+            background-color: #8B1538;
+            /* Add your avatar image file to /static/images/ folder */
+            background-image: url('/static/images/avatar.png');
+        }
+
+        .input-container {
+            padding: 1.5rem 2rem;
+            background-color: #fff;
+            border-top: 1px solid #e1e5e9;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+
+        .input-form {
+            display: flex;
+            gap: 15px;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 14px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 25px;
+            outline: none;
+            font-size: 16px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .input-field:focus {
+            border-color: #D4294A;
+            box-shadow: 0 2px 12px rgba(212, 41, 74, 0.2);
+        }
+
+        .send-button {
+            padding: 14px 28px;
+            background-color: #D4294A;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(212, 41, 74, 0.3);
+        }
+
+        .send-button:hover:not(:disabled) {
+            background-color: #E8335A;
+            box-shadow: 0 4px 12px rgba(212, 41, 74, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .send-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            padding: 1.5rem;
+            justify-content: flex-start;
+            align-items: flex-start;
+        }
+
+        .loading.show {
+            display: flex;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .typing-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            margin: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 14px;
+            background-color: #8B1538;
+            /* Same avatar as assistant messages: */
+            background-image: url('/static/images/avatar.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .typing-dots {
+            background-color: #f1f3f5;
+            border-radius: 18px;
+            border-bottom-left-radius: 5px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #8B1538;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        .typing-cursor {
+            color: #8B1538;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .slide-in-message {
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: slideIn 0.4s ease-out forwards;
+        }
+
+        @keyframes slideIn {
+            0% {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .law-summary {
+            background-color: #f8f9fa;
+            border-left: 4px solid #8B1538;
+            padding: 12px;
+            margin: 12px 0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .law-item {
+            margin: 6px 0;
+            padding: 6px;
+            background-color: white;
+            border-radius: 4px;
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #666;
+        }
+
+        .welcome-message h3 {
+            color: #8B1538;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .example-questions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 2rem;
+        }
+
+        .example-question {
+            background-color: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .example-question:hover {
+            background-color: #e9ecef;
+            border-color: #8B1538;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 21, 56, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .chat-messages {
+                padding: 1rem;
+            }
+
+            .input-container {
+                padding: 1rem;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .example-questions {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Enhanced Mobile Responsive Design */
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+
+            .header-logo {
+                width: 120px;
+                height: 60px;
+            }
+
+            .beta-version {
+                font-size: 0.7rem;
+                padding: 0.25rem 0.6rem;
+            }
+
+            .chat-container {
+                padding-top: 100px;
+            }
+
+            .chat-messages {
+                padding: 1rem;
+            }
+
+            .message-content {
+                font-size: 14px;
+                padding: 0.8rem 1rem;
+            }
+
+            .message-avatar {
+                width: 32px;
+                height: 32px;
+                margin: 0 8px;
+            }
+
+            .typing-avatar {
+                width: 32px;
+                height: 32px;
+                margin: 0 8px;
+            }
+
+            .input-field {
+                font-size: 16px; /* Prevents zoom on iOS */
+                padding: 12px 16px;
+            }
+
+            .send-button {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+
+            .welcome-message h3 {
+                font-size: 1.3rem;
+            }
+
+            .welcome-message p {
+                font-size: 14px;
+            }
+
+            .example-question {
+                padding: 0.8rem;
+                font-size: 13px;
+            }
+
+            .law-summary {
+                padding: 8px;
+                margin-bottom: 8px;
+                font-size: 12px;
+            }
+
+            .law-item {
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 0.8rem;
+            }
+
+            .header-logo {
+                width: 100px;
+                height: 50px;
+            }
+
+            .beta-version {
+                font-size: 0.65rem;
+                padding: 0.2rem 0.5rem;
+            }
+
+            .chat-container {
+                padding-top: 85px;
+            }
+
+            .message-content {
+                max-width: 90%;
+                font-size: 13px;
+                padding: 0.7rem 0.9rem;
+            }
+
+            .message-avatar {
+                width: 28px;
+                height: 28px;
+                margin: 0 6px;
+            }
+
+            .typing-avatar {
+                width: 28px;
+                height: 28px;
+                margin: 0 6px;
+            }
+
+            .input-form {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .input-field {
+                border-radius: 20px;
+            }
+
+            .send-button {
+                width: 100%;
+                border-radius: 20px;
+            }
+
+            .welcome-message h3 {
+                font-size: 1.2rem;
+            }
+
+            .example-question {
+                padding: 0.7rem;
+                font-size: 12px;
+            }
+        }
+
+        /* Touch-friendly improvements for mobile devices */
+        @media (hover: none) and (pointer: coarse) {
+            .send-button,
+            .example-question {
+                min-height: 44px; /* Apple's recommended touch target */
+            }
+
+            .input-field {
+                min-height: 44px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-logo"></div>
+        <div class="beta-version">beta m1.1</div>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message">
+                <h3>Merhaba! Size nasıl yardımcı olabilirim?</h3>
+                <p>Türk hukuku hakkında sorularınızı sorabilirsiniz. AI teknolojisi kullanarak size en doğru hukuki rehberliği sunuyorum.</p>
+                
+                <div class="example-questions">
+                    <div class="example-question" onclick="askExample('İşten çıkarılırsam tazminat alabilir miyim?')">
+                        İşten çıkarılırsam tazminat alabilir miyim?
+                    </div>
+                    <div class="example-question" onclick="askExample('Çevre kirliliği yaparsam ne olur?')">
+                        Çevre kirliliği yaparsam ne olur?
+                    </div>
+                    <div class="example-question" onclick="askExample('Vergi ödememezsem hapse girer miyim?')">
+                        Vergi ödememezsem hapse girer miyim?
+                    </div>
+                    <div class="example-question" onclick="askExample('Trafik kazası yaparsam sorumluluğum nedir?')">
+                        Trafik kazası yaparsam sorumluluğum nedir?
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="typing-indicator">
+                <div class="typing-avatar"></div>
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <form class="input-form" id="chatForm">
+                <input 
+                    type="text" 
+                    class="input-field" 
+                    id="questionInput" 
+                    placeholder="Hukuki sorunuzu yazın..."
+                    autocomplete="off"
+                >
+                <button type="submit" class="send-button" id="sendButton">
+                    Gönder
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const chatForm = document.getElementById('chatForm');
+        const questionInput = document.getElementById('questionInput');
+        const sendButton = document.getElementById('sendButton');
+        const loading = document.getElementById('loading');
+
+        // Auto-resize and focus input
+        questionInput.focus();
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const question = questionInput.value.trim();
+            
+            if (!question) return;
+
+            // Clear welcome message if it exists
+            const welcomeMessage = document.querySelector('.welcome-message');
+            if (welcomeMessage) {
+                welcomeMessage.remove();
+            }
+
+            // Add user message
+            addMessage(question, 'user');
+            
+            // Clear input and disable
+            questionInput.value = '';
+            sendButton.disabled = true;
+            
+            // Show loading
+            loading.classList.add('show');
+
+            try {
+                // Auto-detect API base URL for both localhost and production
+                const API_BASE = window.location.origin;
+                const response = await fetch(`${API_BASE}/api/ask`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: question })
+                });
+
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    addAssistantResponse(data.response);
+                } else {
+                    addMessage('Üzgünüm, bir hata oluştu: ' + (data.message || 'Bilinmeyen hata'), 'assistant');
+                }
+            } catch (error) {
+                addMessage('Bağlantı hatası oluştu. Lütfen tekrar deneyin.', 'assistant');
+                console.error('Error:', error);
+            } finally {
+                loading.classList.remove('show');
+                sendButton.disabled = false;
+                questionInput.focus();
+            }
+        });
+
+        function parseMarkdown(text) {
+            // Simple markdown parser for basic formatting
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Bold
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')              // Italic
+                .replace(/`(.*?)`/g, '<code>$1</code>')            // Inline code
+                .replace(/\n/g, '<br>');                           // Line breaks
+        }
+
+        function addMessage(content, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            if (sender === 'user') {
+                // User messages appear instantly
+                contentDiv.innerHTML = parseMarkdown(content);
+                messageDiv.appendChild(contentDiv);
+            } else {
+                // AI messages get typewriter effect
+                const avatar = document.createElement('div');
+                avatar.className = `message-avatar assistant-avatar`;
+                
+                messageDiv.appendChild(avatar);
+                messageDiv.appendChild(contentDiv);
+                
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // Start typewriter effect
+                typeWriterEffect(contentDiv, content);
+                return; // Exit early since we handle the DOM addition above
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function typeWriterEffect(element, content) {
+            element.innerHTML = '';
+            
+            // Parse markdown first to get formatted content
+            const formattedContent = parseMarkdown(content);
+            
+            // Extract plain text for typing effect
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = formattedContent;
+            const textContent = tempDiv.textContent || tempDiv.innerText;
+            
+            let i = 0;
+            const speed = 8; // Much faster - 8ms per character
+            let currentText = '';
+            
+            function typeText() {
+                if (i < textContent.length) {
+                    currentText += textContent[i];
+                    
+                    // Create formatted version of current text
+                    const currentFormatted = parseMarkdown(currentText);
+                    element.innerHTML = currentFormatted + '<span class="typing-cursor">|</span>';
+                    
+                    // Auto scroll
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    
+                    i++;
+                    setTimeout(typeText, speed);
+                } else {
+                    // Typing complete, show final formatted content
+                    element.innerHTML = formattedContent;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            }
+            
+            typeText();
+        }
+
+        function addAssistantResponse(response) {
+            // Create message structure
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message assistant';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar assistant-avatar';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(contentDiv);
+            chatMessages.appendChild(messageDiv);
+            
+            // Show law summary with fade-in animation if available
+            if (response.found_laws && response.found_laws.length > 0) {
+                let lawSummary = '<div class="law-summary">';
+                lawSummary += `<strong>Analiz Edilen Kanunlar (${response.found_laws.length}):</strong><br>`;
+                response.found_laws.forEach(law => {
+                    lawSummary += `<div class="law-item">• ${law.law_name} (${law.law_type})</div>`;
+                });
+                lawSummary += '</div><br>';
+                
+                contentDiv.innerHTML = lawSummary;
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // Small delay before starting slide-in for legal analysis
+                setTimeout(() => {
+                    slideInAnalysis(contentDiv, response.legal_analysis);
+                }, 500);
+            } else {
+                // No law summary, just start slide-in the legal analysis
+                slideInEffect(contentDiv, response.legal_analysis);
+            }
+        }
+
+        function slideInAnalysis(element, newContent) {
+            // This function appends slide-in content to existing content
+            const analysisDiv = document.createElement('div');
+            analysisDiv.style.marginTop = '15px';
+            
+            // Parse markdown and set content immediately
+            const formattedContent = parseMarkdown(newContent);
+            analysisDiv.innerHTML = formattedContent;
+            
+            // Add slide-in animation class
+            analysisDiv.classList.add('slide-in-message');
+            
+            // Add the analysis div to the main content
+            element.appendChild(analysisDiv);
+            
+            // Auto scroll
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function askExample(question) {
+            questionInput.value = question;
+            chatForm.dispatchEvent(new Event('submit'));
+        }
+
+        // Enter key support
+        questionInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                chatForm.dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>

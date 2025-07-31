@@ -1,0 +1,33 @@
+# Core dependencies for Legal RAG System
+pandas>=1.5.0
+numpy>=1.21.0
+sqlite3  # Built into Python
+
+# Embedding Models (choose one or more)
+# Option 1: SentenceTransformers (RECOMMENDED for Turkish)
+sentence-transformers>=2.2.0
+torch>=1.12.0
+transformers>=4.21.0
+
+# Option 2: OpenAI Embeddings (requires API key)
+openai>=0.27.0
+
+# Option 3: TF-IDF (lightweight, no external dependencies)
+scikit-learn>=1.1.0
+
+# Additional utilities
+pickle  # Built into Python
+json    # Built into Python
+
+# Optional but recommended
+tqdm>=4.64.0  # Progress bars
+matplotlib>=3.5.0  # For visualizations
+seaborn>=0.11.0   # For better plots
+
+# For Streamlit web interface (optional)
+streamlit>=1.20.0
+plotly>=5.10.0
+
+# For advanced text processing
+nltk>=3.7
+regex>=2022.7.9

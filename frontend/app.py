@@ -57,12 +57,17 @@ def initialize_system():
     global legal_ai_system
     try:
         if legal_ai_system is None:
-            logger.info("Initializing Legal AI System...")
-            legal_ai_system = LegalAISystem()
-            logger.info("✅ System initialized successfully")
+            if FULL_SYSTEM_AVAILABLE:
+                logger.info("Initializing Legal AI System...")
+                legal_ai_system = LegalAISystem()
+                logger.info("✅ System initialized successfully")
+            else:
+                logger.warning("⚠️ Running in demo mode - RAG system not available")
+                legal_ai_system = None
     except Exception as e:
         logger.error(f"Error initializing system: {str(e)}")
-        raise
+        logger.warning("⚠️ Falling back to demo mode")
+        legal_ai_system = None
 
 @app.route('/')
 def index():
@@ -87,7 +92,33 @@ def ask_question():
             initialize_system()
         
         # Process the question
-        response = legal_ai_system.process_legal_question(user_question)
+        if legal_ai_system is not None:
+            response = legal_ai_system.process_legal_question(user_question)
+        else:
+            # Demo mode response
+            response = {
+                'analysis': f"""🏛️ **Demo Mode - Hukuki Değerlendirme**
+
+Sorunuz: "{user_question}"
+
+⚠️ **Demo Modu Aktif**: Şu anda sistem demo modunda çalışıyor. 
+
+🔧 **Sistem Durumu**: 
+- ✅ Web arayüzü çalışıyor
+- ✅ Güvenlik sistemi aktif
+- ✅ Mobil uyumlu tasarım
+- ⏳ RAG sistemi yükleniyor...
+
+💡 **Gerçek Ortamda Bu Özellikler Mevcut**:
+- Detaylı hukuki analiz
+- 5000+ kanun ve yönetmelik araması  
+- GPT-4o ile kapsamlı değerlendirme
+- Madde bazında referanslar
+
+Bu demo versiyonunda temel arayüz test edilebilir.""",
+                'law_summaries': [],
+                'query_optimization': f'Demo sorgu: "{user_question}"'
+            }
         
         # Convert numpy/pandas types to JSON serializable types
         clean_response = convert_to_json_serializable(response)

@@ -616,10 +616,16 @@
                 });
 
                 const data = await response.json();
+                console.log('API Response:', data); // Debug log
                 
-                if (data.status === 'success') {
+                if (data.status === 'success' && data.response) {
+                    console.log('Using nested response format');
                     addAssistantResponse(data.response);
+                } else if (data.status === 'success' && data.legal_analysis) {
+                    console.log('Using direct response format');
+                    addAssistantResponse(data);
                 } else {
+                    console.error('Unexpected response format:', data);
                     addMessage('Üzgünüm, bir hata oluştu: ' + (data.message || 'Bilinmeyen hata'), 'assistant');
                 }
             } catch (error) {

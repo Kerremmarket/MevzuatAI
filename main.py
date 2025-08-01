@@ -11,11 +11,27 @@ from typing import Dict, Any
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from agents.agent1_query_optimizer import QueryOptimizer
-from rag_system.rag_integration import RAGSystem
-from utils.law_matcher import LawMatcher
-from agents.agent3_legal_analyst import LegalAnalyst
-from config.config import Config
+try:
+    from agents.agent1_query_optimizer import QueryOptimizer
+    from rag_system.rag_integration import RAGSystem
+    from utils.law_matcher import LawMatcher
+    from agents.agent3_legal_analyst import LegalAnalyst
+    from config.config import Config
+    IMPORTS_SUCCESSFUL = True
+except ImportError as e:
+    logger.error(f"Import error: {e}")
+    IMPORTS_SUCCESSFUL = False
+    # Create dummy classes for graceful fallback
+    class QueryOptimizer:
+        def optimize_query(self, query): return query
+    class RAGSystem:
+        def search_laws(self, query, top_k=5): return []
+    class LawMatcher:
+        def get_laws_summary(self, names): return []
+        def get_combined_law_text(self, names): return ""
+    class LegalAnalyst:
+        def analyze_with_context(self, **kwargs): return "System temporarily unavailable"
+    from config.config import Config
 
 # Setup logging
 logging.basicConfig(
@@ -30,6 +46,13 @@ class LegalAISystem:
     def __init__(self):
         """Initialize all agents and systems"""
         try:
+            # Check if imports were successful
+            if not IMPORTS_SUCCESSFUL:
+                logger.warning("⚠️ Running with limited functionality due to import issues")
+                self.limited_mode = True
+            else:
+                self.limited_mode = False
+            
             # Validate configuration
             Config.validate_config()
             
@@ -48,11 +71,16 @@ class LegalAISystem:
             self.agent3 = LegalAnalyst()
             logger.info("✅ Agent 3 (Legal Analyst) initialized")
             
-            logger.info("🎉 Legal AI System ready!")
+            if self.limited_mode:
+                logger.info("🚧 Legal AI System ready (LIMITED MODE)")
+            else:
+                logger.info("🎉 Legal AI System ready!")
             
         except Exception as e:
             logger.error(f"Error initializing system: {str(e)}")
-            raise
+            # Don't raise exception, allow graceful degradation
+            self.limited_mode = True
+            logger.info("🚧 Running in limited/demo mode")
     
     def process_legal_question(self, user_question: str) -> Dict[str, Any]:
         """

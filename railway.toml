@@ -1,5 +1,5 @@
 [deploy]
-startCommand = "gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 300 --chdir frontend app:app"
+startCommand = "python start.py"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"

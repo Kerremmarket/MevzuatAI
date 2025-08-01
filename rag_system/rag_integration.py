@@ -7,10 +7,22 @@ import numpy as np
 import json
 import glob
 import openai
-from sklearn.metrics.pairwise import cosine_similarity
 from typing import List, Dict, Optional
 import logging
 from config.config import Config
+
+# Import sklearn with fallback
+try:
+    from sklearn.metrics.pairwise import cosine_similarity
+    SKLEARN_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ scikit-learn not available: {e}")
+    SKLEARN_AVAILABLE = False
+    # Simple cosine similarity fallback
+    def cosine_similarity(a, b):
+        """Simple cosine similarity fallback"""
+        import numpy as np
+        return np.dot(a, b.T) / (np.linalg.norm(a) * np.linalg.norm(b, axis=1))
 
 class RAGSystem:
     def __init__(self, api_key: str = None):

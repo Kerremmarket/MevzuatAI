@@ -30,17 +30,30 @@ class RAGSystem:
         try:
             embeddings_dir = Config.RAG_EMBEDDINGS_DIR
             
-            # Find the latest embedding files
-            embedding_files = glob.glob(f"{embeddings_dir}/legal_embeddings_*.npy")
-            chunk_files = glob.glob(f"{embeddings_dir}/legal_chunks_*.json")
+            # Find the latest embedding files in multiple locations
+            search_paths = [
+                f"{embeddings_dir}/legal_embeddings_*.npy",
+                "../rag_system/embeddings_output/legal_embeddings_*.npy",
+                "rag_system/embeddings_output/legal_embeddings_*.npy"
+            ]
+            
+            embedding_files = []
+            chunk_files = []
+            
+            for path in search_paths:
+                embedding_files.extend(glob.glob(path))
+                chunk_path = path.replace("legal_embeddings_", "legal_chunks_").replace(".npy", ".json")
+                chunk_files.extend(glob.glob(chunk_path))
             
             if not embedding_files or not chunk_files:
-                # Try loading from the old location
-                embedding_files = glob.glob("../rag_system/embeddings_output/legal_embeddings_*.npy")
-                chunk_files = glob.glob("../rag_system/embeddings_output/legal_chunks_*.json")
-            
-            if not embedding_files or not chunk_files:
-                raise FileNotFoundError("No embedding files found. Please ensure embeddings are generated.")
+                # In production, fall back to demo mode gracefully
+                if Config.IS_PRODUCTION:
+                    self.logger.warning("🚧 Running in production without RAG embeddings - using demo mode")
+                    self.chunks = []
+                    self.embeddings = None
+                    return
+                else:
+                    raise FileNotFoundError("No embedding files found. Please run the embedding generation first.")
             
             # Get the latest files
             latest_embedding_file = sorted(embedding_files)[-1]
@@ -56,11 +69,16 @@ class RAGSystem:
             with open(latest_chunk_file, 'r', encoding='utf-8') as f:
                 self.chunks = json.load(f)
             
-            self.logger.info(f"Loaded {len(self.chunks)} chunks with {self.embeddings.shape[1]}-dimensional embeddings")
+            self.logger.info(f"✅ Loaded {len(self.chunks)} chunks with {self.embeddings.shape[1]}-dimensional embeddings")
             
         except Exception as e:
-            self.logger.error(f"Error loading embeddings: {str(e)}")
-            raise
+            if Config.IS_PRODUCTION:
+                self.logger.warning(f"🚧 Production fallback: RAG system not available ({str(e)})")
+                self.chunks = []
+                self.embeddings = None
+            else:
+                self.logger.error(f"Error loading embeddings: {str(e)}")
+                raise
     
     def get_query_embedding(self, query: str) -> Optional[np.ndarray]:
         """Generate embedding for the search query"""
@@ -86,6 +104,11 @@ class RAGSystem:
             List[Dict]: List of relevant law information
         """
         try:
+            # Check if RAG system is available
+            if self.embeddings is None or not self.chunks:
+                self.logger.warning("🚧 RAG system not available, returning empty results")
+                return []
+            
             self.logger.info(f"Searching for: '{query}'")
             
             # Generate query embedding

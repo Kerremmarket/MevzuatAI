@@ -12,19 +12,14 @@ class Config:
     
     # Environment Detection
     ENVIRONMENT = os.getenv('RAILWAY_ENVIRONMENT_NAME', 'development')  # Railway sets this automatically
-    IS_PRODUCTION = ENVIRONMENT == 'production' or bool(os.getenv('RAILWAY_ENVIRONMENT')) or bool(os.getenv('PORT'))
+    IS_PRODUCTION = ENVIRONMENT == 'production' or bool(os.getenv('RAILWAY_ENVIRONMENT'))
     
     # OpenAI API Configuration - NEVER hardcode keys!
-    # Primary fallback order for API keys
-    OPENAI_API_KEY = (
-        os.getenv('OPENAI_API_KEY_LARGE') or 
-        os.getenv('OPENAI_API_KEY_NANO') or 
-        os.getenv('OPENAI_API_KEY')
-    )
+    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
     
     # Agent-specific API Keys for optimal performance
-    AGENT1_API_KEY = os.getenv('OPENAI_API_KEY_NANO') or OPENAI_API_KEY    # Nano key for gpt-4o-mini
-    AGENT3_API_KEY = os.getenv('OPENAI_API_KEY_LARGE') or OPENAI_API_KEY   # Large context key for gpt-4o
+    AGENT1_API_KEY = os.getenv('OPENAI_API_KEY_NANO', OPENAI_API_KEY)    # Nano key for gpt-4o-mini
+    AGENT3_API_KEY = os.getenv('OPENAI_API_KEY_LARGE', OPENAI_API_KEY)   # Large context key for gpt-4o
     
     # Agent Models
     AGENT1_MODEL = "gpt-4o-mini"  # Query optimization agent
@@ -108,21 +103,5 @@ class Config:
     def validate_config(cls):
         """Validate that all required configuration is present"""
         if not cls.OPENAI_API_KEY:
-            print("❌ No OpenAI API key found!")
-            print("Please set one of these environment variables:")
-            print("- OPENAI_API_KEY_LARGE")
-            print("- OPENAI_API_KEY_NANO") 
-            print("- OPENAI_API_KEY")
-            raise ValueError("OpenAI API key is required")
-        
-        # Validate API keys
-        if not cls.AGENT1_API_KEY:
-            print("⚠️ Warning: No Agent 1 API key, using fallback")
-        if not cls.AGENT3_API_KEY:
-            print("⚠️ Warning: No Agent 3 API key, using fallback")
-        
-        print(f"✅ Environment: {cls.ENVIRONMENT}")
-        print(f"✅ Production mode: {cls.IS_PRODUCTION}")
-        print(f"✅ API keys configured: Agent1={bool(cls.AGENT1_API_KEY)}, Agent3={bool(cls.AGENT3_API_KEY)}")
-        
+            raise ValueError("OPENAI_API_KEY is required")
         return True

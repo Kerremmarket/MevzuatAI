@@ -115,29 +115,40 @@ def ask_question():
         if legal_ai_system is not None:
             response = legal_ai_system.process_legal_question(user_question)
         else:
-            # Demo mode response
+            # Demo mode response - Enhanced
             response = {
-                'analysis': f"""🏛️ **Demo Mode - Hukuki Değerlendirme**
+                'status': 'demo',
+                'user_question': user_question,
+                'legal_analysis': f"""🏛️ **Demo Mode - Sistem Başlatılıyor**
 
-Sorunuz: "{user_question}"
+**Sorunuz:** "{user_question}"
 
-⚠️ **Demo Modu Aktif**: Şu anda sistem demo modunda çalışıyor. 
-
-🔧 **Sistem Durumu**: 
+🚧 **Sistem Durumu:**
 - ✅ Web arayüzü çalışıyor
-- ✅ Güvenlik sistemi aktif
+- ✅ API anahtarları yapılandırıldı: {bool(Config.OPENAI_API_KEY)}
+- ✅ Güvenlik sistemi aktif  
 - ✅ Mobil uyumlu tasarım
-- ⏳ RAG sistemi yükleniyor...
+- ⏳ RAG sistemi yükleniyor/mevcut değil
 
-💡 **Gerçek Ortamda Bu Özellikler Mevcut**:
-- Detaylı hukuki analiz
-- 5000+ kanun ve yönetmelik araması  
-- GPT-4o ile kapsamlı değerlendirme
-- Madde bazında referanslar
+💡 **Tam Sistem Özellikleri:**
+- 🤖 GPT-4o-mini ile sorgu optimizasyonu
+- 🔍 5000+ kanun ve yönetmelik araması
+- ⚖️ GPT-4o ile kapsamlı hukuki analiz  
+- 📋 Madde bazında referanslar
+- 📝 Detaylı hukuki süreç bilgileri
 
-Bu demo versiyonunda temel arayüz test edilebilir.""",
-                'law_summaries': [],
-                'query_optimization': f'Demo sorgu: "{user_question}"'
+🔄 **Sistem Yeniden Başlatılıyor...**
+Lütfen birkaç saniye sonra tekrar deneyin. Sistem tam kapasiteyle çalışacaktır.
+
+⚠️ **Not:** Bu geçici demo modudur. Sistem tam yüklendiğinde detaylı hukuki analiz sağlanacaktır.""",
+                'found_laws': [],
+                'optimized_query': f'Demo optimizasyonu: "{user_question}"',
+                'pipeline_steps': {
+                    'step1_query_optimization': 'Demo mode',
+                    'step2_rag_results': 0,
+                    'step3_laws_found': 0,
+                    'step4_analysis_complete': False
+                }
             }
         
         # Convert numpy/pandas types to JSON serializable types
@@ -157,22 +168,67 @@ Bu demo versiyonunda temel arayüz test edilebilir.""",
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    """Health check endpoint"""
+    """Enhanced health check endpoint for deployment monitoring"""
     try:
+        # Initialize system if not already done
         if legal_ai_system is None:
-            return jsonify({
-                'status': 'not_ready',
-                'message': 'System not initialized'
-            })
+            initialize_system()
         
-        return jsonify({
-            'status': 'ready',
-            'message': 'Legal AI System is ready'
-        })
+        # Check system status
+        system_status = {
+            'status': 'healthy',
+            'timestamp': pd.Timestamp.now().isoformat(),
+            'environment': Config.ENVIRONMENT,
+            'production_mode': Config.IS_PRODUCTION,
+            'components': {
+                'flask_app': True,
+                'config_loaded': bool(Config.OPENAI_API_KEY),
+                'legal_ai_system': legal_ai_system is not None,
+                'api_keys_configured': {
+                    'agent1': bool(Config.AGENT1_API_KEY),
+                    'agent3': bool(Config.AGENT3_API_KEY)
+                }
+            }
+        }
+        
+        # Add RAG system status if available
+        if legal_ai_system is not None:
+            try:
+                rag_available = hasattr(legal_ai_system, 'rag_system') and legal_ai_system.rag_system is not None
+                if rag_available:
+                    system_status['components']['rag_system'] = {
+                        'available': True,
+                        'embeddings_loaded': legal_ai_system.rag_system.embeddings is not None,
+                        'chunks_loaded': bool(legal_ai_system.rag_system.chunks)
+                    }
+                else:
+                    system_status['components']['rag_system'] = {
+                        'available': False,
+                        'mode': 'demo'
+                    }
+            except Exception:
+                system_status['components']['rag_system'] = {
+                    'available': False,
+                    'mode': 'demo'
+                }
+        
+        # Return appropriate HTTP status
+        if legal_ai_system is None or not Config.OPENAI_API_KEY:
+            system_status['status'] = 'degraded'
+            return jsonify(system_status), 503
+        
+        return jsonify(system_status), 200
+        
     except Exception as e:
         return jsonify({
             'status': 'error',
-            'message': str(e)
+            'timestamp': pd.Timestamp.now().isoformat(),
+            'error': str(e),
+            'components': {
+                'flask_app': True,
+                'config_loaded': False,
+                'legal_ai_system': False
+            }
         }), 500
 
 if __name__ == '__main__':

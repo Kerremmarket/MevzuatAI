@@ -15,7 +15,13 @@ import json
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from main import LegalAISystem
+try:
+    from main import LegalAISystem
+    FULL_SYSTEM_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Full system not available: {e}")
+    FULL_SYSTEM_AVAILABLE = False
+    LegalAISystem = None
 from config.config import Config
 
 # Setup logging

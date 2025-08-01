@@ -52,7 +52,7 @@ class LegalAnalyst:
                 ])
                 user_message += f"\n\nAnaliz Edilen Kanunlar:\n{summaries_text}"
             
-            response = openai.chat.completions.create(
+            response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": self.system_prompt},
@@ -155,7 +155,7 @@ MADDE 20 – Çevreyi kirletenler hakkında 5.000 Türk Lirası idarî para ceza
             
             user_message = f"{context_info}\n\n❓ **Analiz Edilecek Soru:** {user_question}"
             
-            response = openai.chat.completions.create(
+            response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": self.system_prompt},

@@ -4,7 +4,7 @@ Takes user's natural language question and creates optimal RAG query
 Uses GPT-4o-mini for efficiency
 """
 
-import openai
+from openai import OpenAI
 from typing import Optional
 import logging
 from config.config import Config
@@ -13,7 +13,7 @@ class QueryOptimizer:
     def __init__(self, api_key: str = None):
         """Initialize the Query Optimizer Agent"""
         self.api_key = api_key or Config.AGENT1_API_KEY or Config.OPENAI_API_KEY
-        openai.api_key = self.api_key
+        self.client = OpenAI(api_key=self.api_key)
         self.model = Config.AGENT1_MODEL
         self.max_tokens = Config.MAX_TOKENS_AGENT1
         self.system_prompt = Config.AGENT1_SYSTEM_PROMPT
@@ -34,7 +34,7 @@ class QueryOptimizer:
         try:
             self.logger.info(f"Optimizing query for: {user_question[:100]}...")
             
-            response = openai.chat.completions.create(
+            response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": self.system_prompt},

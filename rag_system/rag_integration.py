@@ -6,7 +6,7 @@ Loads embeddings and performs semantic search to find top 10 relevant laws
 import numpy as np
 import json
 import glob
-import openai
+from openai import OpenAI
 from typing import List, Dict, Optional
 import logging
 from config.config import Config
@@ -28,7 +28,7 @@ class RAGSystem:
     def __init__(self, api_key: str = None):
         """Initialize RAG System"""
         self.api_key = api_key or Config.AGENT3_API_KEY or Config.OPENAI_API_KEY
-        openai.api_key = self.api_key
+        self.client = OpenAI(api_key=self.api_key)
         
         self.chunks = None
         self.embeddings = None
@@ -95,7 +95,7 @@ class RAGSystem:
     def get_query_embedding(self, query: str) -> Optional[np.ndarray]:
         """Generate embedding for the search query"""
         try:
-            response = openai.embeddings.create(
+            response = self.client.embeddings.create(
                 model="text-embedding-3-small",
                 input=query
             )

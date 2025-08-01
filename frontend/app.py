@@ -13,7 +13,14 @@ import pandas as pd
 import json
 
 # Add parent directory to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
+
+# Log current working directory for debugging
+print(f"Current working directory: {os.getcwd()}")
+print(f"App file directory: {current_dir}")
+print(f"Static folder path: {os.path.join(current_dir, 'static')}")
 
 try:
     from main import LegalAISystem
@@ -28,9 +35,17 @@ from config.config import Config
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize Flask app
-app = Flask(__name__)
+# Initialize Flask app with proper static file configuration
+# Use absolute path for static folder to avoid path issues
+static_folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+app = Flask(__name__, 
+           static_folder=static_folder_path,
+           static_url_path='/static')
 CORS(app)
+
+# Log static folder configuration
+print(f"Static folder configured at: {static_folder_path}")
+print(f"Static folder exists: {os.path.exists(static_folder_path)}")
 
 # Global variable to hold the AI system
 legal_ai_system = None
@@ -73,6 +88,11 @@ def initialize_system():
 def index():
     """Main chat interface"""
     return render_template('chat.html')
+
+@app.route('/favicon.ico')
+def favicon():
+    """Serve favicon"""
+    return app.send_static_file('images/logo1.png')
 
 @app.route('/api/ask', methods=['POST'])
 def ask_question():

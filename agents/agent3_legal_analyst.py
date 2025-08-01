@@ -3,7 +3,7 @@ Agent 3: Legal Analyst
 Uses GPT-4o to read full law texts and provide comprehensive legal analysis
 """
 
-import openai
+from openai import OpenAI
 from typing import List, Dict, Optional
 import logging
 from config.config import Config
@@ -12,7 +12,7 @@ class LegalAnalyst:
     def __init__(self, api_key: str = None):
         """Initialize the Legal Analyst Agent"""
         self.api_key = api_key or Config.AGENT3_API_KEY or Config.OPENAI_API_KEY
-        openai.api_key = self.api_key
+        self.client = OpenAI(api_key=self.api_key)
         self.model = Config.AGENT3_MODEL
         self.max_tokens = Config.MAX_TOKENS_AGENT3
         self.system_prompt = Config.AGENT3_SYSTEM_PROMPT

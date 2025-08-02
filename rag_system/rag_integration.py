@@ -76,6 +76,7 @@ class RAGSystem:
         try:
             import boto3
             import tempfile
+            import os
             
             bucket_name = os.getenv('S3_EMBEDDINGS_BUCKET', 'mevzuat-ai-embeddings')
             

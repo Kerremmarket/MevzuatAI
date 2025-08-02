@@ -38,8 +38,9 @@ class Config:
     # Production optimizations
     SKIP_RAG_IN_PRODUCTION = IS_PRODUCTION  # Skip heavy RAG loading in production for now
     
-    # Data Paths
-    DATA_DIR = "data"
+    # Data Paths (ensure they work in Railway deployment)
+    PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    DATA_DIR = os.path.join(PROJECT_ROOT, "data")
     LEGAL_DATASET = "mevzuat_combined_final.xlsx"
     RAG_EMBEDDINGS_DIR = "rag_system/embeddings_output"
     

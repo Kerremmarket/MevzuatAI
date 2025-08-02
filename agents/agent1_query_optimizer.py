@@ -12,6 +12,9 @@ from config.config import Config
 class QueryOptimizer:
     def __init__(self, api_key: str = None):
         """Initialize the Query Optimizer Agent"""
+        # Setup logging first
+        self.logger = logging.getLogger(__name__)
+        
         self.api_key = api_key or Config.AGENT1_API_KEY or Config.OPENAI_API_KEY
         
         # Create OpenAI client with explicit parameters to avoid environment conflicts
@@ -27,9 +30,6 @@ class QueryOptimizer:
         self.model = Config.AGENT1_MODEL
         self.max_tokens = Config.MAX_TOKENS_AGENT1
         self.system_prompt = Config.AGENT1_SYSTEM_PROMPT
-        
-        # Setup logging
-        self.logger = logging.getLogger(__name__)
         
     def optimize_query(self, user_question: str) -> Optional[str]:
         """

@@ -27,6 +27,9 @@ except ImportError as e:
 class RAGSystem:
     def __init__(self, api_key: str = None):
         """Initialize RAG System"""
+        # Setup logging first
+        self.logger = logging.getLogger(__name__)
+        
         self.api_key = api_key or Config.AGENT3_API_KEY or Config.OPENAI_API_KEY
         
         # Create OpenAI client with explicit parameters to avoid environment conflicts
@@ -43,7 +46,6 @@ class RAGSystem:
         
         self.chunks = None
         self.embeddings = None
-        self.logger = logging.getLogger(__name__)
         
         # Load embeddings and chunks
         self.load_embeddings()

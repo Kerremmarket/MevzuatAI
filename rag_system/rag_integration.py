@@ -38,11 +38,66 @@ class RAGSystem:
         self.load_embeddings()
     
     def load_embeddings(self):
-        """Load the pre-generated embeddings and chunks"""
+        """Load embeddings from local files or cloud storage"""
+        try:
+            # Try cloud storage first (for production)
+            if Config.IS_PRODUCTION and self._try_load_from_cloud():
+                return
+            
+            # Fall back to local files (for development)
+            if self._try_load_from_local():
+                return
+                
+            # If both fail, use demo mode
+            self.logger.warning("🚧 No embeddings found - running in demo mode")
+            self.chunks = []
+            self.embeddings = None
+            
+        except Exception as e:
+            self.logger.warning(f"🚧 Error loading embeddings: {str(e)} - using demo mode")
+            self.chunks = []
+            self.embeddings = None
+    
+    def _try_load_from_cloud(self):
+        """Try to load embeddings from S3"""
+        try:
+            import boto3
+            import tempfile
+            
+            bucket_name = os.getenv('S3_EMBEDDINGS_BUCKET', 'mevzuat-ai-embeddings')
+            
+            s3 = boto3.client('s3',
+                aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+                region_name=os.getenv('AWS_REGION', 'us-east-1')
+            )
+            
+            # Download to temp files
+            with tempfile.TemporaryDirectory() as temp_dir:
+                embeddings_file = os.path.join(temp_dir, 'embeddings.npy')
+                chunks_file = os.path.join(temp_dir, 'chunks.json')
+                
+                # Download embeddings
+                s3.download_file(bucket_name, 'embeddings/legal_embeddings_20250730_005323.npy', embeddings_file)
+                s3.download_file(bucket_name, 'embeddings/legal_chunks_20250730_005323.json', chunks_file)
+                
+                # Load into memory
+                self.embeddings = np.load(embeddings_file)
+                with open(chunks_file, 'r', encoding='utf-8') as f:
+                    self.chunks = json.load(f)
+                
+                self.logger.info(f"✅ Loaded {len(self.chunks)} chunks from S3")
+                return True
+                
+        except Exception as e:
+            self.logger.info(f"Could not load from cloud: {str(e)}")
+            return False
+    
+    def _try_load_from_local(self):
+        """Try to load embeddings from local files"""
         try:
             embeddings_dir = Config.RAG_EMBEDDINGS_DIR
             
-            # Find the latest embedding files in multiple locations
             search_paths = [
                 f"{embeddings_dir}/legal_embeddings_*.npy",
                 "../rag_system/embeddings_output/legal_embeddings_*.npy",
@@ -58,21 +113,11 @@ class RAGSystem:
                 chunk_files.extend(glob.glob(chunk_path))
             
             if not embedding_files or not chunk_files:
-                # In production, fall back to demo mode gracefully
-                if Config.IS_PRODUCTION:
-                    self.logger.warning("🚧 Running in production without RAG embeddings - using demo mode")
-                    self.chunks = []
-                    self.embeddings = None
-                    return
-                else:
-                    raise FileNotFoundError("No embedding files found. Please run the embedding generation first.")
+                return False
             
             # Get the latest files
             latest_embedding_file = sorted(embedding_files)[-1]
             latest_chunk_file = sorted(chunk_files)[-1]
-            
-            self.logger.info(f"Loading embeddings from: {latest_embedding_file}")
-            self.logger.info(f"Loading chunks from: {latest_chunk_file}")
             
             # Load embeddings
             self.embeddings = np.load(latest_embedding_file)
@@ -81,16 +126,12 @@ class RAGSystem:
             with open(latest_chunk_file, 'r', encoding='utf-8') as f:
                 self.chunks = json.load(f)
             
-            self.logger.info(f"✅ Loaded {len(self.chunks)} chunks with {self.embeddings.shape[1]}-dimensional embeddings")
+            self.logger.info(f"✅ Loaded {len(self.chunks)} chunks from local files")
+            return True
             
         except Exception as e:
-            if Config.IS_PRODUCTION:
-                self.logger.warning(f"🚧 Production fallback: RAG system not available ({str(e)})")
-                self.chunks = []
-                self.embeddings = None
-            else:
-                self.logger.error(f"Error loading embeddings: {str(e)}")
-                raise
+            self.logger.info(f"Could not load from local: {str(e)}")
+            return False
     
     def get_query_embedding(self, query: str) -> Optional[np.ndarray]:
         """Generate embedding for the search query"""

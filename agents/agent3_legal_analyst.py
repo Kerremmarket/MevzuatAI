@@ -12,7 +12,17 @@ class LegalAnalyst:
     def __init__(self, api_key: str = None):
         """Initialize the Legal Analyst Agent"""
         self.api_key = api_key or Config.AGENT3_API_KEY or Config.OPENAI_API_KEY
-        self.client = OpenAI(api_key=self.api_key)
+        
+        # Create OpenAI client with explicit parameters to avoid environment conflicts
+        try:
+            self.client = OpenAI(
+                api_key=self.api_key,
+                timeout=30.0,
+                max_retries=2
+            )
+        except Exception as e:
+            print(f"OpenAI client creation failed: {e}")
+            raise
         self.model = Config.AGENT3_MODEL
         self.max_tokens = Config.MAX_TOKENS_AGENT3
         self.system_prompt = Config.AGENT3_SYSTEM_PROMPT

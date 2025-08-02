@@ -13,7 +13,17 @@ class QueryOptimizer:
     def __init__(self, api_key: str = None):
         """Initialize the Query Optimizer Agent"""
         self.api_key = api_key or Config.AGENT1_API_KEY or Config.OPENAI_API_KEY
-        self.client = OpenAI(api_key=self.api_key)
+        
+        # Create OpenAI client with explicit parameters to avoid environment conflicts
+        try:
+            self.client = OpenAI(
+                api_key=self.api_key,
+                timeout=30.0,
+                max_retries=2
+            )
+        except Exception as e:
+            self.logger.error(f"OpenAI client creation failed: {e}")
+            raise
         self.model = Config.AGENT1_MODEL
         self.max_tokens = Config.MAX_TOKENS_AGENT1
         self.system_prompt = Config.AGENT1_SYSTEM_PROMPT

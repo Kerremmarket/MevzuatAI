@@ -28,7 +28,18 @@ class RAGSystem:
     def __init__(self, api_key: str = None):
         """Initialize RAG System"""
         self.api_key = api_key or Config.AGENT3_API_KEY or Config.OPENAI_API_KEY
-        self.client = OpenAI(api_key=self.api_key)
+        
+        # Create OpenAI client with explicit parameters to avoid environment conflicts
+        try:
+            self.client = OpenAI(
+                api_key=self.api_key,
+                timeout=30.0,
+                max_retries=2
+            )
+        except Exception as e:
+            self.logger.error(f"OpenAI client creation failed: {e}")
+            # Don't raise in RAG system, just disable embeddings
+            self.client = None
         
         self.chunks = None
         self.embeddings = None
@@ -136,6 +147,10 @@ class RAGSystem:
     def get_query_embedding(self, query: str) -> Optional[np.ndarray]:
         """Generate embedding for the search query"""
         try:
+            if self.client is None:
+                self.logger.error("OpenAI client not available")
+                return None
+                
             response = self.client.embeddings.create(
                 model="text-embedding-3-small",
                 input=query
